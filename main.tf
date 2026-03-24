@@ -172,6 +172,10 @@ resource "aws_rds_cluster" "primary" {
     aws_security_group.default,
   ]
 
+  lifecycle {
+    ignore_changes = [ storage_encrypted ] // Changing encryption in-place is not supported and the Terraform AWS Provider have bugs related to storage state.
+  }
+
   dynamic "s3_import" {
     for_each = var.s3_import[*]
     content {
@@ -319,6 +323,7 @@ resource "aws_rds_cluster" "secondary" {
     ignore_changes = [
       replication_source_identifier, # will be set/managed by Global Cluster
       snapshot_identifier,           # if created from a snapshot, will be non-null at creation, but null afterwards
+      storage_encrypted,             # Changing encryption in-place is not supported and the Terraform AWS Provider have bugs related to storage state.
     ]
   }
 }
